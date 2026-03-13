@@ -212,13 +212,23 @@ function Scarfaze:CreateWindow(config)
     Shadow.SliceCenter = Rect.new(24, 24, 276, 276)
 
     local dragging, dragStart, startPos
-    Main.InputBegan:Connect(function(input)
+    local _sliderActive = false
+    Scarfaze._sliderActive = _sliderActive
+
+    local DragHandle = Instance.new("Frame", Main)
+    DragHandle.Name = "DragHandle"
+    DragHandle.Size = UDim2.new(1, 0, 0, 50)
+    DragHandle.Position = UDim2.new(0, 0, 0, 0)
+    DragHandle.BackgroundTransparency = 1
+    DragHandle.ZIndex = 0
+
+    DragHandle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true; dragStart = input.Position; startPos = Main.Position
         end
     end)
     UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        if dragging and not Scarfaze._sliderActive and input.UserInputType == Enum.UserInputType.MouseMovement then
             local d = input.Position - dragStart
             Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
         end
@@ -238,24 +248,24 @@ function Scarfaze:CreateWindow(config)
     LogoFrame.BackgroundTransparency = 1
 
     local TitleLabel = Instance.new("TextLabel", LogoFrame)
-    TitleLabel.Size = UDim2.new(1, -20, 0, 30)
-    TitleLabel.Position = UDim2.new(0, 10, 0, 14)
+    TitleLabel.Size = UDim2.new(1, 0, 0, 36)
+    TitleLabel.Position = UDim2.new(0, 0, 0, 10)
     TitleLabel.Text = hubName
-    TitleLabel.TextColor3 = self.Theme.Accent
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.Font = Enum.Font.GothamBlack
-    TitleLabel.TextSize = 20
-    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.TextSize = 26
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
     TitleLabel.BackgroundTransparency = 1
     self._titleLabel = TitleLabel
 
     local SubLabel = Instance.new("TextLabel", LogoFrame)
-    SubLabel.Size = UDim2.new(1, -20, 0, 16)
-    SubLabel.Position = UDim2.new(0, 10, 0, 46)
+    SubLabel.Size = UDim2.new(1, 0, 0, 16)
+    SubLabel.Position = UDim2.new(0, 0, 0, 50)
     SubLabel.Text = "v3 pro edition"
     SubLabel.TextColor3 = self.Theme.SubText
     SubLabel.Font = Enum.Font.Gotham
     SubLabel.TextSize = 12
-    SubLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SubLabel.TextXAlignment = Enum.TextXAlignment.Center
     SubLabel.BackgroundTransparency = 1
 
     local Sep1 = Instance.new("Frame", Sidebar)
@@ -618,9 +628,15 @@ function Scarfaze:CreateWindow(config)
             Handle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             Corner(Handle, 7)
 
+            local SliderBtn = Instance.new("TextButton", Track)
+            SliderBtn.Size = UDim2.new(1, 0, 1, 0)
+            SliderBtn.BackgroundTransparency = 1
+            SliderBtn.Text = ""
+            SliderBtn.ZIndex = 2
+
             local draggingSlider = false
-            local function updateSlider(input)
-                local rel = math.clamp((input.Position.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1)
+            local function updateSlider(inputPos)
+                local rel = math.clamp((inputPos.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X, 0, 1)
                 local raw = min + (max - min) * rel
                 value = opts.Integer and math.floor(raw + 0.5) or (math.floor(raw * 10 + 0.5) / 10)
                 value = math.clamp(value, min, max)
@@ -631,18 +647,22 @@ function Scarfaze:CreateWindow(config)
                 callback(value)
             end
 
-            Track.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    draggingSlider = true; updateSlider(input)
-                end
+            SliderBtn.MouseButton1Down:Connect(function()
+                draggingSlider = true
+                Scarfaze._sliderActive = true
+                local mousePos = UserInputService:GetMouseLocation()
+                updateSlider(mousePos)
             end)
             UserInputService.InputChanged:Connect(function(input)
                 if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
-                    updateSlider(input)
+                    updateSlider(input.Position)
                 end
             end)
             UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingSlider = false end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    draggingSlider = false
+                    Scarfaze._sliderActive = false
+                end
             end)
 
             local obj = {}
@@ -1173,6 +1193,26 @@ function Scarfaze:CreateWindow(config)
     end
 
     return Window
+end
+
+function Scarfaze:EnableInfJump()
+    if self._infJumpConn then self._infJumpConn:Disconnect() end
+    self._infJumpConn = UserInputService.JumpRequest:Connect(function()
+        local char = LocalPlayer.Character
+        if char then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum and hum:GetState() ~= Enum.HumanoidStateType.Jumping then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end)
+end
+
+function Scarfaze:DisableInfJump()
+    if self._infJumpConn then
+        self._infJumpConn:Disconnect()
+        self._infJumpConn = nil
+    end
 end
 
 return Scarfaze
