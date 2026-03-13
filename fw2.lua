@@ -2,6 +2,7 @@ local TweenService = game:GetService('TweenService')
 local UserInputService = game:GetService('UserInputService')
 local Lighting = game:GetService('Lighting')
 local HttpService = game:GetService('HttpService')
+local TextService = game:GetService('TextService')
 local CoreGui = game:GetService('CoreGui')
 
 local Library = {}
@@ -481,56 +482,72 @@ end
 
 function State:Notify(title, text, duration)
     duration = duration or 3
+
+    title = tostring(title or 'Notification')
+    text = tostring(text or '')
+
+    local maxBodyWidth = 210
+    local titleBounds = TextService:GetTextSize(title, 13, Enum.Font.Code, Vector2.new(maxBodyWidth, 16))
+    local bodyBounds = TextService:GetTextSize(text, 12, Enum.Font.Code, Vector2.new(maxBodyWidth, 9999))
+    local cardWidth = math.clamp(math.max(titleBounds.X, bodyBounds.X) + 22, 140, 226)
+    local contentWidth = cardWidth - 12
+
     local card = create('Frame', {
         Parent = self.Notifications,
         BackgroundColor3 = self.Theme.Panel,
         BackgroundTransparency = 0.12,
         BorderSizePixel = 0,
-        Size = UDim2.fromOffset(250, 0),
+        Size = UDim2.fromOffset(cardWidth, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
     })
     addCorner(card, 4)
     local cardStroke = addStroke(card, self.Theme.Border, 1)
-    addPadding(card, 8, 8, 6, 6)
 
     local line = create('Frame', {
         Parent = card,
         BackgroundColor3 = self.Theme.Accent,
         BorderSizePixel = 0,
-        Size = UDim2.new(0, 2, 1, 0),
         Position = UDim2.fromOffset(0, 0),
+        Size = UDim2.new(0, 1, 1, 0),
     })
 
-    local layout = create('UIListLayout', {
+    local content = create('Frame', {
         Parent = card,
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(7, 0),
+        Size = UDim2.new(1, -7, 0, 0),
+        AutomaticSize = Enum.AutomaticSize.Y,
+    })
+    addPadding(content, 0, 5, 5, 5)
+
+    local layout = create('UIListLayout', {
+        Parent = content,
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 2),
+        Padding = UDim.new(0, 1),
     })
 
     local titleLabel = create('TextLabel', {
-        Parent = card,
+        Parent = content,
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -6, 0, 16),
-        Position = UDim2.fromOffset(6, 0),
+        Size = UDim2.new(0, contentWidth, 0, 14),
         Font = Enum.Font.Code,
         Text = title,
-        TextSize = 14,
+        TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextColor3 = self.Theme.Text,
     })
 
     local bodyLabel = create('TextLabel', {
-        Parent = card,
+        Parent = content,
         BackgroundTransparency = 1,
         AutomaticSize = Enum.AutomaticSize.Y,
-        Size = UDim2.new(1, -6, 0, 0),
-        Position = UDim2.fromOffset(6, 0),
+        Size = UDim2.new(0, contentWidth, 0, 0),
         Font = Enum.Font.Code,
         TextWrapped = true,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top,
         Text = text,
-        TextSize = 13,
+        TextSize = 12,
         TextColor3 = self.Theme.DimText,
     })
 
