@@ -1,15 +1,3 @@
---[[
-AugustusAllInOne.lua
-Single-file version of:
-- AugustusCloserUI.lua
-- AugustusLinoriaCompat.lua
-
-Usage:
-    local Library = loadstring(readfile("AugustusAllInOne.lua"))()
-
-This version has no external dependency on AugustusCloserUI.lua.
-]]
-
 local function __AugustusBuildCoreLibrary()
     local TweenService = game:GetService('TweenService')
     local UserInputService = game:GetService('UserInputService')
@@ -682,7 +670,7 @@ local function __AugustusBuildCoreLibrary()
             Position = UDim2.fromOffset(8, 0),
             Size = UDim2.new(1, -30, 1, 0),
             Font = Enum.Font.Code,
-            Text = 'Configs',
+            Text = 'Manager',
             TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextColor3 = self.Theme.Text,
