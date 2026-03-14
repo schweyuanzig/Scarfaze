@@ -487,25 +487,38 @@ local function __AugustusBuildCoreLibrary()
         self.Open = state
         local fadeTime = tonumber(self.FadeTime) or 0.18
 
+        local roots = {}
+        if self.Main then table.insert(roots, self.Main) end
+        if self.Manager then table.insert(roots, self.Manager) end
+
         if state then
             self.Gui.Enabled = true
-            if self.Main then
-                self.Main.Visible = true
-                self.Main.BackgroundTransparency = 1
-                tween(self.Main, TweenInfo.new(fadeTime, Enum.EasingStyle.Quad), { BackgroundTransparency = 0.14 })
+            for _, root in ipairs(roots) do
+                root.Visible = true
+                root.BackgroundTransparency = 1
+                tween(root, TweenInfo.new(fadeTime, Enum.EasingStyle.Quad), {
+                    BackgroundTransparency = 0.14
+                })
             end
-        elseif self.Main then
-            tween(self.Main, TweenInfo.new(fadeTime, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 })
+        else
+            for _, root in ipairs(roots) do
+                tween(root, TweenInfo.new(fadeTime, Enum.EasingStyle.Quad), {
+                    BackgroundTransparency = 1
+                })
+            end
+
             task.delay(fadeTime, function()
-                if not self.Open and self.Main then
-                    self.Main.Visible = false
-                end
-                if not self.Open and self.Gui then
-                    self.Gui.Enabled = false
+                if not self.Open then
+                    for _, root in ipairs(roots) do
+                        if root then
+                            root.Visible = false
+                        end
+                    end
+                    if self.Gui then
+                        self.Gui.Enabled = false
+                    end
                 end
             end)
-        else
-            self.Gui.Enabled = state
         end
 
         if self.Blur then
