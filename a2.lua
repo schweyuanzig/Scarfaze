@@ -497,6 +497,9 @@ local function __AugustusBuildCoreLibrary()
         elseif self.Main then
             tween(self.Main, TweenInfo.new(fadeTime, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 })
             task.delay(fadeTime, function()
+                if not self.Open and self.Main then
+                    self.Main.Visible = false
+                end
                 if not self.Open and self.Gui then
                     self.Gui.Enabled = false
                 end
@@ -1139,15 +1142,17 @@ local function __AugustusBuildCoreLibrary()
         self.ThemeManager = ThemeManager.new(self)
         self:_buildManager()
 
-        local toggleKey = self.Options.ToggleKey or Enum.KeyCode.RightShift
-        UserInputService.InputBegan:Connect(function(input, gameProcessed)
-            if gameProcessed then
-                return
-            end
-            if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == toggleKey then
-                self:SetOpen(not self.Open)
-            end
-        end)
+        if self.Options.ToggleKey ~= nil then
+            local toggleKey = self.Options.ToggleKey or Enum.KeyCode.RightShift
+            UserInputService.InputBegan:Connect(function(input, gameProcessed)
+                if gameProcessed then
+                    return
+                end
+                if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == toggleKey then
+                    self:SetOpen(not self.Open)
+                end
+            end)
+        end
         self:SetOpen(self.Open)
 
     end    function State:_selectTab(tab)
@@ -2877,15 +2882,7 @@ function Library:CreateWindow(options)
     function windowWrapper:Unload()
         self:Destroy()
     end
-
-    table.insert(windowWrapper._connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then
-            return
-        end
-        if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == keyNameToCode(windowWrapper._menuKeyName) then
-            windowWrapper:SetOpen(not windowWrapper._base.State.Open)
-        end
-    end))
+    -- menu toggle is handled by the core window only
 
     function baseWindow.SaveManager:BuildConfigSection(tab)
         local section = tab:AddLeftGroupbox('Config Manager')
