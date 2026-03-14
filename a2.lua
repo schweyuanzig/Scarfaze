@@ -1,15 +1,3 @@
---[[
-AugustusAllInOne.lua
-Single-file version of:
-- AugustusCloserUI.lua
-- AugustusLinoriaCompat.lua
-
-Usage:
-    local Library = loadstring(readfile("AugustusAllInOne.lua"))()
-
-This version has no external dependency on AugustusCloserUI.lua.
-]]
-
 local function __AugustusBuildCoreLibrary()
     local TweenService = game:GetService('TweenService')
     local UserInputService = game:GetService('UserInputService')
@@ -485,65 +473,104 @@ local function __AugustusBuildCoreLibrary()
 
     function State:SetOpen(state)
         self.Open = state
-        self.Gui.Enabled = state
+        local fadeTime = tonumber(self.FadeTime) or 0.18
+
+        if state then
+            self.Gui.Enabled = true
+            if self.Main then
+                self.Main.Visible = true
+                self.Main.BackgroundTransparency = 1
+                tween(self.Main, TweenInfo.new(fadeTime, Enum.EasingStyle.Quad), { BackgroundTransparency = 0.14 })
+            end
+        elseif self.Main then
+            tween(self.Main, TweenInfo.new(fadeTime, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 })
+            task.delay(fadeTime, function()
+                if not self.Open and self.Gui then
+                    self.Gui.Enabled = false
+                end
+            end)
+        else
+            self.Gui.Enabled = state
+        end
+
         if self.Blur then
-            self.Blur.Size = state and self.Theme.Blur or 0
-            self.Blur.Enabled = state
+            self.Blur.Enabled = true
+            tween(self.Blur, TweenInfo.new(fadeTime, Enum.EasingStyle.Quad), {
+                Size = state and self.Theme.Blur or 0
+            })
+            if not state then
+                task.delay(fadeTime, function()
+                    if self.Blur and not self.Open then
+                        self.Blur.Enabled = false
+                    end
+                end)
+            end
         end
     end
 
     function State:Notify(title, text, duration)
         duration = duration or 3
+        title = tostring(title or 'Notice')
+        text = tostring(text or '')
+
+        local width = math.clamp(math.max(#title * 7, #text * 6) + 24, 140, 240)
+
         local card = create('Frame', {
             Parent = self.Notifications,
             BackgroundColor3 = self.Theme.Panel,
-            BackgroundTransparency = 0.12,
+            BackgroundTransparency = 0.10,
             BorderSizePixel = 0,
-            Size = UDim2.fromOffset(250, 0),
+            Size = UDim2.fromOffset(width, 0),
             AutomaticSize = Enum.AutomaticSize.Y,
+            ClipsDescendants = true,
         })
         addCorner(card, 4)
         local cardStroke = addStroke(card, self.Theme.Border, 1)
-        addPadding(card, 8, 8, 6, 6)
 
         local line = create('Frame', {
             Parent = card,
             BackgroundColor3 = self.Theme.Accent,
             BorderSizePixel = 0,
-            Size = UDim2.new(0, 2, 1, 0),
             Position = UDim2.fromOffset(0, 0),
+            Size = UDim2.new(0, 2, 1, 0),
         })
 
-        local layout = create('UIListLayout', {
+        local content = create('Frame', {
             Parent = card,
+            BackgroundTransparency = 1,
+            Position = UDim2.fromOffset(8, 5),
+            Size = UDim2.new(1, -12, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+        })
+
+        create('UIListLayout', {
+            Parent = content,
             SortOrder = Enum.SortOrder.LayoutOrder,
-            Padding = UDim.new(0, 2),
+            Padding = UDim.new(0, 1),
         })
 
         local titleLabel = create('TextLabel', {
-            Parent = card,
+            Parent = content,
             BackgroundTransparency = 1,
-            Size = UDim2.new(1, -6, 0, 16),
-            Position = UDim2.fromOffset(6, 0),
+            Size = UDim2.new(1, 0, 0, 14),
             Font = Enum.Font.Code,
             Text = title,
-            TextSize = 14,
+            TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextColor3 = self.Theme.Text,
         })
 
         local bodyLabel = create('TextLabel', {
-            Parent = card,
+            Parent = content,
             BackgroundTransparency = 1,
             AutomaticSize = Enum.AutomaticSize.Y,
-            Size = UDim2.new(1, -6, 0, 0),
-            Position = UDim2.fromOffset(6, 0),
+            Size = UDim2.new(1, 0, 0, 0),
             Font = Enum.Font.Code,
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Top,
             Text = text,
-            TextSize = 13,
+            TextSize = 12,
             TextColor3 = self.Theme.DimText,
         })
 
@@ -556,11 +583,11 @@ local function __AugustusBuildCoreLibrary()
         end)
 
         card.BackgroundTransparency = 1
-        tween(card, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { BackgroundTransparency = 0.12 })
+        tween(card, TweenInfo.new(0.16, Enum.EasingStyle.Quad), { BackgroundTransparency = 0.10 })
         task.delay(duration, function()
             if card.Parent then
-                tween(card, TweenInfo.new(0.16, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 })
-                task.wait(0.18)
+                tween(card, TweenInfo.new(0.14, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 })
+                task.wait(0.16)
                 if card.Parent then
                     card:Destroy()
                 end
@@ -929,7 +956,8 @@ local function __AugustusBuildCoreLibrary()
         self.FlagCallbacks = {}
         self.Tabs = {}
         self.CurrentTab = nil
-        self.Open = true
+        self.Open = self.Options.AutoShow ~= false
+        self.FadeTime = tonumber(self.Options.FadeTime) or 0.18
 
         self.Gui = create('ScreenGui', {
             Name = self.Options.Name or 'AugustusUI',
@@ -1104,13 +1132,13 @@ local function __AugustusBuildCoreLibrary()
             if gameProcessed then
                 return
             end
-            if input.KeyCode == toggleKey then
+            if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == toggleKey then
                 self:SetOpen(not self.Open)
             end
         end)
-    end
+        self:SetOpen(self.Open)
 
-    function State:_selectTab(tab)
+    end    function State:_selectTab(tab)
         if self.CurrentTab == tab then
             return
         end
@@ -2790,11 +2818,13 @@ function Library:CreateWindow(options)
     local baseWindow = BaseLibrary:CreateWindow({
         Name = options.Name,
         Title = options.Title,
-        Subtitle = options.Subtitle or options.FooterText or 'augustus linoria-safe compatibility layer',
+        Subtitle = options.Subtitle or options.FooterText or 'augustus all-in-one',
         Theme = options.Theme or 'Augustus',
-        ToggleKey = Enum.KeyCode.Unknown,
+        ToggleKey = Enum.KeyCode.RightShift,
         Blur = options.Blur ~= false,
         ConfigFolder = options.ConfigFolder or 'AugustusConfigs',
+        AutoShow = options.AutoShow,
+        FadeTime = options.FadeTime,
     })
 
     patchSaveManager(baseWindow.SaveManager, baseWindow.State)
