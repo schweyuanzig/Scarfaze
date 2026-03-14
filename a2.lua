@@ -1,3 +1,15 @@
+--[[
+AugustusAllInOne.lua
+Single-file version of:
+- AugustusCloserUI.lua
+- AugustusLinoriaCompat.lua
+
+Usage:
+    local Library = loadstring(readfile("AugustusAllInOne.lua"))()
+
+This version has no external dependency on AugustusCloserUI.lua.
+]]
+
 local function __AugustusBuildCoreLibrary()
     local TweenService = game:GetService('TweenService')
     local UserInputService = game:GetService('UserInputService')
