@@ -1,7 +1,4 @@
--- fresh_AugustusAllInOne_v7.lua
--- v7 wrapper based on AugustusAllInOne_v6.lua
-
-local Base = loadstring(readfile("AugustusAllInOne_v6.lua"))()
+local Base = loadstring(game:HttpGet("https://raw.githubusercontent.com/schweyuanzig/Scarfaze/refs/heads/main/AugustusMain.lua"))()
 
 local RawCreateWindow = Base.CreateWindow
 
