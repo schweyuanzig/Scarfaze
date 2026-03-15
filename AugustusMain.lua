@@ -1,11 +1,3 @@
--- AugustusAllInOne_v6.lua
--- v6 additions:
--- - AddTextbox
--- - AddBindList
--- - Dropdown search
--- - HSV Color Picker
--- - improved multi dropdown visuals
-
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
